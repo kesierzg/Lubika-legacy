@@ -1,0 +1,9 @@
+Package: pl.kesierzg.lubikalegacy
+Name: LubikaLegacy
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Lubika for legacy iOS devices
+Maintainer: kesierzg
+Author: kesierzg
+Section: Utilities
+Depends: firmware (>= 6.0)
