@@ -29,6 +29,7 @@ typedef enum {
 - (NSString *)displayName;
 - (NSString *)email;
 - (NSString *)balanceText;
+- (NSDictionary *)periodicTicketData;
 
 - (void)loginWithUsername:(NSString *)username
                  password:(NSString *)password

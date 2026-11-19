@@ -46,6 +46,12 @@ static void LubikaLog(NSString *fmt, ...) {
         _iid          = [[u stringForKey:@"lubika.iid"] copy];
         _cardNumber   = [[u stringForKey:@"lubika.card"] copy];
         _expirationDateTime = [[u stringForKey:@"lubika.exp"] copy];
+        // Cached profile + photo so the UI shows instantly on launch and survives
+        // a flaky/offline network (we only replace them when a fresh fetch succeeds).
+        id cachedUser = [u objectForKey:@"lubika.userCache"];
+        if ([cachedUser isKindOfClass:[NSDictionary class]]) _user = cachedUser;
+        NSString *cachedPhoto = [u stringForKey:@"lubika.photoB64"];
+        if (cachedPhoto.length) _photo = [LubikaClient imageFromBase64:cachedPhoto];
         // The backend requires the `iid` header on EVERY request, including login
         // (Android generates it at splash, before any API call). Generate+persist a
         // stable UUID now so login and all later calls carry it. Binding to the
@@ -125,22 +131,22 @@ static void LubikaLog(NSString *fmt, ...) {
         if (bs.length > 300) bs = [bs substringToIndex:300];
         LubikaLog(@"<-- http=%ld status=%ld %@ | %@", (long)httpCode, (long)status, req.URL.path, bs);
 
-        if (netErr) { if (done) done(nil, netErr); return; }
+        if (netErr) {
+            // iOS 6 surfaces a server 401 as a *network* error
+            // (NSURLErrorUserCancelledAuthentication, -1012) instead of a status
+            // code, so catch that here and refresh the token too.
+            if (netErr.code == NSURLErrorUserCancelledAuthentication &&
+                allowRefresh && self.refreshToken.length) {
+                [self refreshAndRetry:req completion:done];
+                return;
+            }
+            if (done) done(nil, netErr);
+            return;
+        }
 
         // Access token expired -> refresh once and retry the original request.
         if (status == 401 && allowRefresh && self.refreshToken.length) {
-            [self refreshTokenThen:^(BOOL ok) {
-                if (ok) {
-                    NSMutableURLRequest *retry = [req mutableCopy];
-                    [retry setValue:[@"Bearer " stringByAppendingString:self.token]
-                 forHTTPHeaderField:@"Authorization"];
-                    [self send:retry allowRefresh:NO completion:done];
-                } else {
-                    NSError *e = [NSError errorWithDomain:@"Lubika" code:401
-                        userInfo:@{NSLocalizedDescriptionKey:@"Sesja wygasła. Zaloguj się ponownie."}];
-                    if (done) done(nil, e);
-                }
-            }];
+            [self refreshAndRetry:req completion:done];
             return;
         }
 
@@ -173,6 +179,22 @@ static void LubikaLog(NSString *fmt, ...) {
             return;
         }
         if (done) done([data isKindOfClass:[NSDictionary class]] ? data : nil, nil);
+    }];
+}
+
+- (void)refreshAndRetry:(NSURLRequest *)req
+             completion:(void (^)(NSDictionary *, NSError *))done {
+    [self refreshTokenThen:^(BOOL ok) {
+        if (ok) {
+            NSMutableURLRequest *retry = [req mutableCopy];
+            [retry setValue:[@"Bearer " stringByAppendingString:self.token]
+         forHTTPHeaderField:@"Authorization"];
+            [self send:retry allowRefresh:NO completion:done];
+        } else {
+            NSError *e = [NSError errorWithDomain:@"Lubika" code:401
+                userInfo:@{NSLocalizedDescriptionKey:@"Sesja wygasła. Zaloguj się ponownie."}];
+            if (done) done(nil, e);
+        }
     }];
 }
 
@@ -229,6 +251,7 @@ static void LubikaLog(NSString *fmt, ...) {
      completion:^(NSDictionary *data, NSError *err) {
         if (!err && [data isKindOfClass:[NSDictionary class]]) {
             self.user = data;   // cache full profile for the UI
+            [[NSUserDefaults standardUserDefaults] setObject:data forKey:@"lubika.userCache"];
             id card = data[@"card"];
             if ([card isKindOfClass:[NSDictionary class]]) {
                 id num = card[@"number"];
@@ -250,7 +273,10 @@ static void LubikaLog(NSString *fmt, ...) {
             NSString *b64 = [photo isKindOfClass:[NSDictionary class]] ? photo[@"base64"] : nil;
             if ([b64 isKindOfClass:[NSString class]]) {
                 UIImage *img = [LubikaClient imageFromBase64:b64];
-                if (img) self.photo = img;
+                if (img) {
+                    self.photo = img;
+                    [[NSUserDefaults standardUserDefaults] setObject:b64 forKey:@"lubika.photoB64"];
+                }
             }
         }
         if (completion) completion(self.photo, err);
@@ -283,6 +309,17 @@ static void LubikaLog(NSString *fmt, ...) {
     NSString *num = [[NSString stringWithFormat:@"%.2f", v]
                      stringByReplacingOccurrencesOfString:@"." withString:@","];
     return [num stringByAppendingString:@" zł"];
+}
+
+- (NSDictionary *)periodicTicketData {
+    id at = self.user[@"activeTickets"];
+    id arr = [at isKindOfClass:[NSDictionary class]] ? at[@"periodicTickets"] : nil;
+    if ([arr isKindOfClass:[NSArray class]] && [(NSArray *)arr count] > 0) {
+        id t = [(NSArray *)arr objectAtIndex:0];
+        id td = [t isKindOfClass:[NSDictionary class]] ? t[@"ticketData"] : nil;
+        return [td isKindOfClass:[NSDictionary class]] ? td : nil;
+    }
+    return nil;
 }
 
 - (void)getControlQRForType:(LubikaQRType)type

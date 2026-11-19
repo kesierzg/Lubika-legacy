@@ -2,10 +2,10 @@
 
 THIS APP HAS BEEN CREATED WITH HELP OF AI. OBJECTIVE-C AIN'T EASY
 
-UI still needs work to be 1:1, beta 1 is PoC.
+beta 2: UI closer to original, refresh fixes, caching
 
 <p align="center">
-  <img src="beta1.jpg" width="300" alt="LubikaLegacy running on an iPhone 4S">
+  <img src="beta2.jpg" width="300" alt="LubikaLegacy running on an iPhone 4S">
 </p>
 
 DISCLAIMER: 
@@ -32,8 +32,10 @@ UWAGA:
 > Aplikacja nie jest autoryzowana przez ZTM Lublin i korzystanie z niej może być wbrew ich regulaminowi.
 
 Klient Lubika przeportowany z oficjalnej aplikacji na Androida.
+
 Loguje się na twoje konto Lubika i pokazuje **kod QR kontroli generowany po stronie serwera**, twój profil i saldo.
-**Nie** da się w nim kupować biletów!!! Żeby z tego korzystać, musisz mieć bilet okresowy!!!
+
+**Nie da się**  w nim kupować biletów!!! Żeby z tego korzystać, musisz mieć bilet okresowy!!!
 
 Przetestowane w realu, działa. Ale niczego nie obiecuję i u ciebie może być różnie, 
 zależnie od czasu, miejsca, matematyki, układu gwiazd albo od tego, czy kontroler to chad, czy przegryw.

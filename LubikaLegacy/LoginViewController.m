@@ -8,6 +8,7 @@
 
 @implementation LoginViewController {
     UITextField *_user, *_pass;
+    UISwitch    *_remember;
     UIButton    *_go;
     UILabel     *_status;
     UIActivityIndicatorView *_spin;
@@ -43,8 +44,15 @@
     tap.cancelsTouchesInView = NO;
     [self.view addGestureRecognizer:tap];
 
+    _remember = [[UISwitch alloc] initWithFrame:CGRectMake(x, 224, 51, 31)];
+    _remember.onTintColor = LubikaMagenta();
+    [self.view addSubview:_remember];
+    UILabel *rl = [[UILabel alloc] initWithFrame:CGRectMake(x+62, 226, fw-62, 28)];
+    rl.text = @"Zapamiętaj mnie"; rl.font = [UIFont systemFontOfSize:15];
+    [self.view addSubview:rl];
+
     _go = [UIButton buttonWithType:UIButtonTypeCustom];
-    _go.frame = CGRectMake(x, 240, fw, 46);
+    _go.frame = CGRectMake(x, 272, fw, 46);
     _go.backgroundColor = LubikaMagenta();
     _go.titleLabel.font = [UIFont boldSystemFontOfSize:17];
     _go.layer.cornerRadius = 8; _go.layer.masksToBounds = YES;
@@ -55,13 +63,22 @@
 
     _spin = [[UIActivityIndicatorView alloc]
              initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
-    _spin.center = CGPointMake(w/2, 300); _spin.hidesWhenStopped = YES;
+    _spin.center = CGPointMake(w/2, 334); _spin.hidesWhenStopped = YES;
     [self.view addSubview:_spin];
 
-    _status = [[UILabel alloc] initWithFrame:CGRectMake(x, 330, fw, 80)];
+    _status = [[UILabel alloc] initWithFrame:CGRectMake(x, 360, fw, 80)];
     _status.numberOfLines = 0; _status.textColor = [UIColor redColor];
     _status.textAlignment = NSTextAlignmentCenter; _status.font = [UIFont systemFontOfSize:13];
     [self.view addSubview:_status];
+
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    if ([d boolForKey:@"lubika.saveLogin"]) {
+        _remember.on = YES;
+        _user.text = [d stringForKey:@"lubika.email"];
+        _pass.text = [d stringForKey:@"lubika.pass"];
+    }
+
+    LubikaClearLabels(self.view);
 }
 
 - (UITextField *)fieldAt:(CGFloat)y placeholder:(NSString *)p {
@@ -99,6 +116,16 @@
         completion:^(NSDictionary *data, NSError *error) {
             [_spin stopAnimating]; _go.enabled = YES;
             if (error) { _status.text = error.localizedDescription; return; }
+            NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+            if (_remember.on) {
+                [d setBool:YES forKey:@"lubika.saveLogin"];
+                [d setObject:_user.text forKey:@"lubika.email"];
+                [d setObject:_pass.text forKey:@"lubika.pass"];
+            } else {
+                [d setBool:NO forKey:@"lubika.saveLogin"];
+                [d removeObjectForKey:@"lubika.email"];
+                [d removeObjectForKey:@"lubika.pass"];
+            }
             if ([data[@"activationRequired"] boolValue]) {
                 _status.text = @"Konto wymaga aktywacji nośnika (iid/SMS).";
             }

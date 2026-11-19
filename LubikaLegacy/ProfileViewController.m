@@ -54,7 +54,7 @@
     CGFloat side = w - 120;
     _qr = [[UIImageView alloc] initWithFrame:CGRectMake((w-side)/2, y, side, side)];
     _qr.contentMode = UIViewContentModeScaleAspectFit;
-    _qr.backgroundColor = [UIColor colorWithWhite:0.97 alpha:1];
+    _qr.backgroundColor = [UIColor clearColor];
     [_scroll addSubview:_qr];
 
     _spin = [[UIActivityIndicatorView alloc]
@@ -75,6 +75,7 @@
     y += 46;
 
     _scroll.contentSize = CGSizeMake(w, y + 24);
+    LubikaClearLabels(self.view);
 }
 
 - (void)logout {
