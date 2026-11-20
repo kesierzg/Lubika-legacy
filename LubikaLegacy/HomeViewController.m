@@ -170,9 +170,9 @@ enum { IconStop = 1, IconTime, IconPeriodic, IconCalendar };
     cal.backgroundColor = [UIColor clearColor];
     [_ticketCard addSubview:cal];
     [self drawIcon:IconCalendar in:cal color:LubikaMagenta()];
-    _dayBadge = [[UILabel alloc] initWithFrame:CGRectMake(0, 26, 70, 36)];
+    _dayBadge = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 70, 62)];
     _dayBadge.textAlignment = NSTextAlignmentCenter; _dayBadge.textColor = LubikaMagenta();
-    _dayBadge.font = [UIFont boldSystemFontOfSize:26];
+    _dayBadge.font = [UIFont boldSystemFontOfSize:24];
     _dayBadge.adjustsFontSizeToFitWidth = YES; _dayBadge.minimumScaleFactor = 0.6;
     [cal addSubview:_dayBadge];
 

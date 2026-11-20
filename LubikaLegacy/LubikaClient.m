@@ -39,8 +39,14 @@ static void LubikaLog(NSString *fmt, ...) {
         // (from eu.lublin.ztm.lubika HttpHeadersInterceptor, v2.2.1 / versionCode 229).
         // Our earlier iOS string had only five fields, so the version slot was empty.
         // Mirror the Android shape exactly so <appVersion> lands in the right slot.
-        _verHeader = [@"Android;13;33;TQ3A.230805.001;lubika;2.2.1" copy];
+        // Overridable from NSUserDefaults so, if the server ever bumps the required
+        // app version, you can spoof the new one WITHOUT recompiling, e.g.:
+        //   defaults write pl.kesierzg.lubikalegacy lubika.verHeader \
+        //     "Android;13;33;TQ3A.230805.001;lubika;2.3.0"
         NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+        NSString *verOverride = [u stringForKey:@"lubika.verHeader"];
+        _verHeader = verOverride.length ? [verOverride copy]
+                                        : [@"Android;13;33;TQ3A.230805.001;lubika;2.2.1" copy];
         _token        = [[u stringForKey:@"lubika.token"] copy];
         _refreshToken = [[u stringForKey:@"lubika.refresh"] copy];
         _iid          = [[u stringForKey:@"lubika.iid"] copy];

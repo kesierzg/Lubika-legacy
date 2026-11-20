@@ -2,10 +2,8 @@
 
 THIS APP HAS BEEN CREATED WITH HELP OF AI. OBJECTIVE-C AIN'T EASY
 
-beta 2: UI closer to original, refresh fixes, caching
-
 <p align="center">
-  <img src="beta2.jpg" width="300" alt="LubikaLegacy running on an iPhone 4S">
+  <img src="release.jpg" width="300" alt="LubikaLegacy running on an iPhone 4S">
 </p>
 
 DISCLAIMER: 
